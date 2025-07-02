@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Beauty Quiz | SkinAI</title>
+  <link rel="stylesheet" href="/static/quiz_styles.css">
+</head>
+<body>
+
+<header class="main-header">
+  <nav class="navbar">
+    <div class="user-profile">
+      {% if username %}
+      <a href="/profile">
+        <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+      </a>
+      <span class="username">{{ username }}</span>
+      {% endif %}
+    </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/produse">Produse</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+        <li><a href="/analiza_tenului">Analiză ten</a></li>
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+  </nav>
+</header>
+
+<section class="hero-glass">
+  <div class="flower flower-top-left"></div>
+  <div class="flower flower-bottom-right"></div>
+  <div class="glass-panel">
+    <h1 class="hero-title"> Quiz</h1>
+    <p class="hero-subtitle">Completează quiz-ul și primești o rutină personalizată de îngrijire!</p>
+
+    <form method="POST" action="/beauty_quiz">
+      <div class="quiz-question">
+        <label>1. Cum îți simți pielea după curățare?</label><br>
+        <select name="piele_dupa_curatare" required>
+          <option value="uscata">Uscată</option>
+          <option value="normala">Normală</option>
+          <option value="grasa">Grasă</option>
+        </select>
+      </div>
+
+      <div class="quiz-question">
+        <label>2. Ai tendință de acnee?</label><br>
+        <select name="acnee" required>
+          <option value="da">Da</option>
+          <option value="nu">Nu</option>
+        </select>
+      </div>
+
+      <div class="quiz-question">
+        <label>3. Care este preocuparea ta principală?</label><br>
+        <select name="preocupare" required>
+          <option value="deshidratare">Deshidratare</option>
+          <option value="riduri">Riduri</option>
+          <option value="pori_dilatati">Pori dilatați</option>
+          <option value="roseata">Roșeață</option>
+        </select>
+      </div>
+
+      <div class="quiz-question">
+        <label>4. Cât de des folosești protecție solară (SPF)?</label><br>
+        <select name="spf" required>
+          <option value="zilnic">Zilnic</option>
+          <option value="vara">Doar vara</option>
+          <option value="niciodata">Niciodată</option>
+        </select>
+      </div>
+
+      <div class="quiz-question">
+        <label>5. Preferi produse parfumate sau fără parfum?</label><br>
+        <select name="parfum" required>
+          <option value="parfumate">Parfumate</option>
+          <option value="fara_parfum">Fără parfum</option>
+        </select>
+      </div>
+
+      <br>
+      <button type="submit" class="btn-glow">Generează Recomandare</button>
+    </form>
+
+    {% if rezultat %}
+      <div class="rezultat-ai">
+        <h3>✨ Recomandarea ta:</h3>
+        <p>{{ rezultat }}</p>
+      </div>
+    
+    {% endif %}
+  </div>
+</section>
+
+</body>
+</html>

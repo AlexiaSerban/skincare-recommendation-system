@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skin. Ai.</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+                  <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero-glass">
+    <div class="flower flower-top-left"></div>
+    <div class="flower flower-bottom-right"></div>
+
+    <div class="glass-panel">
+      <h1 class="hero-title">
+        <span>Skin.</span>
+        <span>Ai.</span>
+      
+      </h1>
+      <p class="hero-subtitle">Frumusețe inteligentă. Rutine personalizate. Îngrijire curată.</p>
+
+      <div class="hero-buttons">
+        {% if username %}
+          <a href="/analiza_tenului" class="btn-glow pulse-once">Analizează-ți tenul</a>
+          <a href="/rutina_mea" class="btn-glow pulse-once">Vezi rutina</a>
+          <a href="/beauty_quiz" class="btn-glow pulse-once">Fă un Quiz</a>
+          {% else %}
+          <a href="/login" class="btn-glow pulse-once">Autentifică-te</a>
+          <a href="/register" class="btn-outline pulse-once">Înregistrează-te</a>
+        {% endif %}
+      </div>
+      
+      </section>
+      
+    </div>
+  </section>
+
+  <!-- PRODUSE -->
+  <section class="products-highlight">
+    <div class="products-wrapper">
+      <h2>🧴 Produse </h2>
+      <p>Explorează selecția noastră atent aleasă pentru fiecare tip de ten.</p>
+      <a href="/produse" class="btn simple pulse-once">Vezi produsele</a>
+    </div>
+    <div class="products-wrapper">
+      <h2>🤍 Produsele tale favorite</h2>
+      <p>Explorează preferatele tale.</p>
+      <a href="/favorite" class="btn simple pulse-once">Vezi favoritele</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2025 SkinAI</p>
+    <div class="chatbot">
+      <button onclick="toggleChat()">💬</button>
+    </div>
+  </footer>
+
+  <!-- CHATBOT -->
+  <div id="chat-container">
+    <h3 style="text-align: center; margin-bottom: 1rem; font-family: 'Playfair Display', serif; color: #a86e77;">
+      Consultant SkinAI
+    </h3>
+    <div id="chatbox">
+    </div>
+    <input type="text" id="userInput" placeholder="Scrie un mesaj..." onkeypress="if(event.key === 'Enter') sendMessage()">
+    <button onclick="sendMessage()">Trimite</button>
+    <button onclick="toggleChat()">Închide</button>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    function toggleChat() {
+        let chatContainer = document.getElementById("chat-container");
+        chatContainer.style.display = (chatContainer.style.display === "none" || chatContainer.style.display === "") ? "block" : "none";
+    }
+    
+    // Functie pentru a adauga un mesaj in chat
+    function addMessage(role, message) {
+        const chatbox = document.getElementById("chatbox");
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("chat-bubble", role === "user" ? "user" : "bot");
+        messageElement.innerText = message;
+        chatbox.appendChild(messageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+    
+    // Functie pentru a trimite mesaj cu loading
+    function sendMessage() {
+        const userInput = document.getElementById("userInput").value.trim();
+        if (userInput !== "") {
+            addMessage("user", userInput);
+            document.getElementById("userInput").value = "";
+    
+            const loadingBubble = document.createElement("div");
+            loadingBubble.classList.add("chat-bubble", "bot");
+            loadingBubble.id = "loading";
+            loadingBubble.innerText = "Scrie...";
+            document.getElementById("chatbox").appendChild(loadingBubble);
+            document.getElementById("chatbox").scrollTop = document.getElementById("chatbox").scrollHeight;
+    
+            fetch("/chatbot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const loadingElem = document.getElementById("loading");
+                if (loadingElem) loadingElem.remove();
+    
+                addMessage("bot", data.response);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+    
+                const loadingElem = document.getElementById("loading");
+                if (loadingElem) loadingElem.remove();
+    
+                addMessage("bot", "Îmi pare rău, a apărut o eroare!");
+            });
+        }
+    }
+    </script>
+    
+</body>
+</html>

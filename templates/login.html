@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autentificare</title>
+    <link rel="stylesheet" href="/static/login.css">
+</head>
+<body>
+
+    <img src="/static/flower.png" alt="Decor stânga" class="flower-top-left">
+    <img src="/static/flower.png" alt="Decor dreapta" class="flower-bottom-right">
+
+    <div class="auth-container">
+        <h1>Autentificare</h1>
+        <form action="/login" method="POST">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="password">Parolă:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Autentificare</button>
+        </form>
+
+        <p>Nu ai un cont? <a href="{{ url_for('register') }}">Înregistrează-te acum</a></p>
+    </div>
+
+</body>
+</html>
