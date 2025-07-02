@@ -24,7 +24,6 @@ Această aplicație web oferă recomandări personalizate de produse cosmetice, 
 ##  Instalare
 
 ### 1. Se clonează proiectul
-git clone https://gitlab.com/linkul.git , apoi: cd nume-proiect
 
 ### 2. Se creează și activează un mediu virtual (opțional)
 python -m venv venv
