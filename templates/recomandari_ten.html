@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recomandări Ten {{ skin_type }}</title>
+  <link rel="stylesheet" href="/static/produse.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+        <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+        <li><a href="/produse">Toate Produsele</a></li>
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <!-- TITLU PAGINA -->
+  <section class="intro-section">
+    <h1 class="section-title">Recomandări pentru tenul {{ skin_type.upper() }}</h1>
+    <p style="text-align: center; color: var(--text-soft); max-width: 800px; margin-inline: auto;">
+      Produsele de mai jos sunt selectate automat pentru a corespunde nevoilor specifice ale tenului tău.
+    </p>
+  </section>
+
+  <!-- GRID PRODUSE -->
+  <section class="product-grid">
+    {% for product in produse %}
+    <div class="product-card">
+      <div class="product-image-wrapper">
+        <img src="{{ product.imagine }}" alt="{{ product.product_name }}" onclick="window.location.href='/product/{{ product.id }}'">
+        {% if username %}
+        <button class="favorite-btn {% if product.id in favorite_ids %}active{% endif %}" data-product-id="{{ product.id }}">
+          <span class="heart-icon">&#10084;</span>
+        </button>
+        {% endif %}
+      </div>
+      <h2>{{ product.product_name }}</h2>
+      <p><strong>Tip:</strong> {{ product.product_type }}</p>
+    </div>
+    {% endfor %}
+  </section>
+
+  <footer>
+    <p>&copy; 2025 SkinAI</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // FAVORITE
+      const favoriteButtons = document.querySelectorAll(".favorite-btn");
+      favoriteButtons.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const productId = btn.dataset.productId;
+          const isActive = btn.classList.toggle("active");
+  
+          fetch("/toggle_favorite", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              product_id: productId,
+              action: isActive ? "add" : "remove"
+            })
+          }).catch((err) => console.error("Eroare la trimitere:", err));
+        });
+      });
+    });
+  </script>
+  
+    
+</body>
+</html>

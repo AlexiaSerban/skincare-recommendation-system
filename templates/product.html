@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.product_name }} - Smart Recommendations</title>
+    <link rel="stylesheet" href="/static/product.css">
+
+</head>
+<body>
+    <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+                  <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+    <section class="product-detail">
+        <div class="product-image" style="position: relative;">
+          <img src="{{ product.imagine }}" alt="{{ product.product_name }}">
+          
+          {% if session.username %}
+            <button class="favorite-btn {% if product.id in favorite_ids %}active{% endif %}" data-product-id="{{ product.id }}">
+              <span class="heart-icon">&#10084;</span>
+            </button>
+          {% endif %}
+
+        </div>
+    
+        <div class="product-info">
+            <h1>{{ product.product_name }}</h1>
+            <p><strong>Tip:</strong> {{ product.product_type }}</p>
+            <p><strong>Potrivit pentru tipul de ten:</strong> {{ product.skin_type }}</p>
+            {% set clean_list = product.clean_ingreds.strip("[]").replace("'", "").split(",") %}
+            <p><strong>Ingrediente:</strong></p>
+            <div class="ingredient-chips">
+            {% for ing in clean_list %}
+                <span class="chip">{{ ing.strip() }}</span>
+            {% endfor %}
+            </div>
+
+              
+
+            <p><strong>Descriere:</strong><br> {{ product.descriere }}</p>
+            <p><strong>Rating mediu:</strong> ⭐{{ avg_rating }}/5</p>
+            <button onclick="goBackToProducts()" class="btn">Înapoi la produse</button>
+
+            <script>
+              function goBackToProducts() {
+                const page = "{{ request.args.get('page', 1) or 1 }}";
+                window.location.href = `/produse?page=${page}`;
+              }
+            </script>
+                      </div>
+    </section>
+
+    <section class="reviews">
+        <h2>Recenzii</h2>
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="review">
+                    <p><strong>{{ review.username }}</strong> - ⭐{{ review.rating }}/5</p>
+                    <p>{{ review.review_text }}</p>
+                    <small>Adăugată la: {{ review.created_at }}</small>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Nu există recenzii încă.</p>
+        {% endif %}
+
+        {% if session.username %}
+            <h2>Lasă o recenzie</h2>
+            <form method="post">
+                <label for="rating">Rating:</label>
+                <select name="rating" id="rating">
+                    <option value="5">⭐ 5</option>
+                    <option value="4">⭐ 4</option>
+                    <option value="3">⭐ 3</option>
+                    <option value="2">⭐ 2</option>
+                    <option value="1">⭐ 1</option>
+                </select>
+                <label for="review_text">Recenzia ta:</label>
+                <textarea name="review_text" id="review_text" rows="3" required></textarea>
+                <button type="submit">Trimite recenzia</button>
+            </form>
+        {% else %}
+            <p><a href="/login">Autentifică-te</a> pentru a lăsa o recenzie.</p>
+        {% endif %}
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Smart Recommendations</p>
+    </footer>
+    <script>
+      document.getElementById("showMore")?.addEventListener("click", () => {
+        const container = document.getElementById("chipsContainer");
+        container.innerHTML = `
+          {% for ing in product.clean_ingreds %}
+            <span class="chip">{{ ing.strip().strip("'") }}</span>
+          {% endfor %}
+        `;
+      });
+  
+      document.addEventListener("DOMContentLoaded", function () {
+        const favoriteButtons = document.querySelectorAll(".favorite-btn");
+
+        favoriteButtons.forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();  
+
+            const heart = btn.querySelector(".heart-icon");
+            const productId = btn.dataset.productId;
+
+            
+            const isActive = btn.classList.toggle("active");
+
+
+            fetch("/toggle_favorite", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                product_id: productId,
+                action: isActive ? "add" : "remove"
+              })
+            }).catch(err => {
+              console.error("Eroare la favorite:", err);
+            });
+          });
+        });
+      });
+  </script>
+  
+        
+</body>
+</html>

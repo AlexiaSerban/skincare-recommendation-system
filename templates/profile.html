@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Profilul Meu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+        <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+        <li><a href="/produse">Produse</a></li>
+        <li><a href="/analiza_tenului">Analizează-ți tenul</a></li>
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <div class="flower flower-top-left"></div>
+  <div class="flower flower-bottom-right"></div>
+
+  <!-- CONTINUT -->
+  <main class="profile-container">
+
+    <h1 class="main-title">Profilul meu</h1>
+
+    <!--  salvare date -->
+    <form method="POST" action="/profile" enctype="multipart/form-data">
+  
+      <section class="profile-info">
+        <div class="card">
+          <h2 class="card-title">Date personale</h2>
+          <div class="form-section">
+            <label for="nume">Nume</label>
+            <input type="text" id="nume" name="nume" value="{{ profil.nume if profil else '' }}" required>
+    
+            <label for="varsta">Vârstă</label>
+            <input type="number" id="varsta" name="varsta" value="{{ profil.varsta if profil else '' }}" required>
+    
+            <label for="gen">Gen</label>
+            <select id="gen" name="gen">
+              <option value="feminin" {% if profil and profil.gen == 'feminin' %}selected{% endif %}>Feminin</option>
+              <option value="masculin" {% if profil and profil.gen == 'masculin' %}selected{% endif %}>Masculin</option>
+            </select>
+          </div>
+        </div>
+    
+        <div class="card">
+          <h2 class="card-title">Preferințe</h2>
+          <div class="form-section">
+            <label for="tip_ten">Tip de ten</label>
+            <select id="tip_ten" name="tip_ten">
+              <option value="uscat" {% if profil and profil.tip_ten == 'uscat' %}selected{% endif %}>Uscat</option>
+              <option value="gras" {% if profil and profil.tip_ten == 'gras' %}selected{% endif %}>Gras</option>
+              <option value="acneic" {% if profil and profil.tip_ten == 'acneic' %}selected{% endif %}>Acneic</option>
+            </select>
+    
+            <label for="alergii">Alergii</label>
+            <input type="text" id="alergii" name="alergii" value="{{ profil.alergii if profil else '' }}">
+    
+            <label for="textura">Textură preferată</label>
+            <select id="textura" name="textura">
+              <option value="lotiune" {% if profil and profil.textura == 'lotiune' %}selected{% endif %}>Loțiune</option>
+              <option value="crema" {% if profil and profil.textura == 'crema' %}selected{% endif %}>Cremă</option>
+              <option value="gel" {% if profil and profil.textura == 'gel' %}selected{% endif %}>Gel</option>
+              <option value="ulei" {% if profil and profil.textura == 'ulei' %}selected{% endif %}>Ulei</option>
+              <option value="serum" {% if profil and profil.textura == 'serum' %}selected{% endif %}>Ser</option>
+              <option value="mist" {% if profil and profil.textura == 'mist' %}selected{% endif %}>Mist</option>
+              <option value="spray" {% if profil and profil.textura == 'spray' %}selected{% endif %}>Spray</option>
+              <option value="spuma" {% if profil and profil.textura == 'spuma' %}selected{% endif %}>Spumă</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    
+      <div class="form-actions">
+        <button type="submit" class="btn-glow">Actualizează Profilul</button>
+      </div>
+
+    </form> 
+
+    <!-- Recomandari CBF -->
+    <section class="recommendations-section">
+      <h2 class="section-title">Recomandări pentru tine</h2>
+      {% if produse %}
+      <div class="product-grid">
+        {% for product in produse[:10] %}
+        <div class="product-card">
+          <a href="/product/{{ product['id'] }}" style="text-decoration: none; color: inherit;">
+            <img src="{{ product['imagine'] }}" alt="{{ product['product_name'] }}">
+            <h3>{{ product['product_name'] }}</h3>
+            <p><strong>Scor:</strong> {{ product['similarity_score'] | round(2) }}</p>
+          </a>
+    
+          {% if username %}
+          <button class="favorite-btn {% if product['id'] in favorite_ids %}active{% endif %}" data-product-id="{{ product['id'] }}">
+            <span class="heart-icon">&#10084;</span>
+          </button>
+          
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="no-recommendations">Nu există recomandări disponibile momentan.</p>
+      {% endif %}
+    </section>
+    <section class="recommendations-section">
+      <h2 class="section-title">Sugestii bazate pe alți utilizatori</h2>
+      {% if produse_collab %}
+      <div class="product-grid">
+        {% for product in produse_collab %}
+        <div class="product-card">
+          <a href="/product/{{ product['id'] }}" style="text-decoration: none; color: inherit;">
+            <img src="{{ product['imagine'] }}" alt="{{ product['product_name'] }}">
+            <h3>{{ product['product_name'] }}</h3>
+          </a>
+    
+          {% if username %}
+          <button class="favorite-btn {% if product['id'] in favorite_ids %}active{% endif %}" data-product-id="{{ product['id'] }}">
+            <span class="heart-icon">&#10084;</span>
+          </button>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="no-recommendations">Momentan nu avem recomandări bazate pe alți utilizatori.</p>
+      {% endif %}
+    </section>
+
+    
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const favoriteButtons = document.querySelectorAll(".favorite-btn");
+  
+      favoriteButtons.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation(); 
+          e.preventDefault();
+  
+          const productId = btn.dataset.productId;
+          const isActive = btn.classList.toggle("active");
+  
+          fetch("/toggle_favorite", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              product_id: productId,
+              action: isActive ? "add" : "remove"
+            })
+          }).catch((err) => {
+            console.error("Eroare la trimitere:", err);
+          });
+        });
+      });
+    });
+  </script>
+  
+</body>
+</html>

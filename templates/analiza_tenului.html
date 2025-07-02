@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizează-ți Tenul</title>
+  <link rel="stylesheet" href="/static/styles_analiza.css"> <!-- Stiluri personalizate -->
+</head>
+<body>
+
+  <!-- ===== HEADER + NAVIGATION ===== -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <!-- Daca utilizatorul e logat, afisam iconul si numele -->
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+        <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Linkuri din meniu -->
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+        <li><a href="/produse">Produse</a></li>
+
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ===== SECTIUNE PRINCIPALA ===== -->
+  <div class="hero-glass">
+    <div class="flower flower-top-left"></div>
+    <div class="flower flower-bottom-right"></div>
+
+    <div class="glass-panel">
+      <!-- Titlu si subtitlu -->
+      <h1 class="hero-title">
+        <span>Analizează-ți</span>
+        <span>Tipul de Ten</span>
+      </h1>
+      <p class="hero-subtitle">
+        Încarcă o poză clară a pielii tale pentru a analiza tipul de ten și a primi recomandări personalizate pentru îngrjirea lui.
+      </p>
+
+      <!-- Formular pentru upload imagine -->
+      <form id="uploadForm" method="POST" action="/upload_image" enctype="multipart/form-data">
+        <div class="upload-area">
+          <label class="drop-zone" for="image-upload">
+            <img src="{{ url_for('static', filename='icons/drag.png') }}" alt="Drag icon" class="drop-icon">
+            <span>Trage fișierul aici sau selectează din calculator</span>
+          </label>
+          <input type="file" name="image" id="image-upload" accept="image/*" required>
+        </div>
+        <!-- Spinner afisat in timpul procesarii -->
+        <div id="spinner" class="spinner" style="display: none;"></div>
+      </form>
+
+      {% if uploaded_image %}
+        <!-- Daca a fost incarcata o imagine -->
+        <div class="uploaded-image">
+          <h2>Imaginea încărcată:</h2>
+          <img src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" alt="Imaginea ta" />
+          <button class="delete-btn" onclick="deleteImage()">X</button>
+          <p class="upload-success">Imagine încărcată cu succes!</p>
+        </div>
+      {% endif %}
+
+      {% if predicted_class %}
+        <!-- Daca exista rezultat de la AI -->
+        <div class="prediction-result">
+          <h2>Rezultatul Analizei:</h2>
+          <p>Tenul tău este: <strong>{{ predicted_class.upper() }}</strong></p>
+        </div>
+
+        <!-- Carousel cu recomandari -->
+        <div id="recomandari-carousel" class="carousel-wrapper">
+          <h2 id="carousel-titlu"></h2>
+          <div class="carousel-container" id="carousel-produs"></div>
+          <div style="text-align: center; margin-top: 1em;">
+            <div class="carousel-buttons">
+              <a id="vezi-toate-link" href="#" class="carousel-button">Vezi toate recomandările</a>
+            </div>
+            <div class="refresh-container">
+              <button id="regenereaza-recomandari" class="refresh-btn" title="Generează altele">🔄</button>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if not uploaded_image %}
+        <!-- Daca nu s-a incarcat imagine -->
+        <p class="warning">Te rugăm să încarci o fotografie pentru a continua analiza!</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ===== SCRIPT JS: UPLOAD + CAROUSEL ===== -->
+  <script>
+    const dropZone = document.querySelector('.drop-zone');
+    const fileInput = document.querySelector('#image-upload');
+    const uploadForm = document.querySelector('#uploadForm');
+
+    // Click pe zona de drop = trigger input
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag & Drop styling
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = '#fce9ef';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = '#fff';
+    });
+
+    // Drop = preluam fisierul si trimitem formularul
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      fileInput.files = e.dataTransfer.files;
+      dropZone.style.backgroundColor = '#fff';
+      uploadForm.submit();
+    });
+
+    // Selectie din calculator = trimitem formularul
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files.length > 0) {
+        uploadForm.submit();
+      }
+    });
+
+    // Sterge imaginea afisata (doar din UI)
+    function deleteImage() {
+      const imageContainer = document.querySelector('.uploaded-image');
+      imageContainer.style.display = 'none';
+    }
+
+    // Afisam spinner la trimitere
+    uploadForm.addEventListener('submit', function () {
+      document.getElementById('spinner').style.display = 'block';
+    });
+
+    // Afisare carousel cu recomandari
+    document.addEventListener("DOMContentLoaded", () => {
+      const tipTen = "{{ predicted_class|lower }}"; 
+      const carouselContainer = document.getElementById("carousel-produs");
+      const carouselTitlu = document.getElementById("carousel-titlu");
+      const toateLink = document.getElementById("vezi-toate-link");
+      const regenereazaBtn = document.getElementById("regenereaza-recomandari");
+
+      // Functie care afiseaza carduri
+      function afiseazaProduse(data) {
+        carouselContainer.innerHTML = "";
+        data.forEach(prod => {
+          const card = document.createElement("div");
+          card.classList.add("carousel-card");
+          card.innerHTML = `
+            <a href="/product/${prod.id}" style="text-decoration: none; color: inherit;">
+              <img src="${prod.imagine}" alt="${prod.product_name}" class="carousel-img">
+              <h4>${prod.product_name}</h4>
+              <p>${prod.product_type}</p>
+            </a>
+          `;
+          carouselContainer.appendChild(card);
+        });
+      }
+
+      // Daca avem tip de ten prezis => cerem recomandari
+      if (tipTen) {
+        fetch(`/recomandari/${tipTen}`)
+          .then(response => response.json())
+          .then(data => {
+            carouselTitlu.textContent = `Iată câteva produse recomandate pentru tine și tenul tău ${tipTen.toUpperCase()}`;
+            toateLink.href = `/recomandari_ten/${tipTen}`;
+            afiseazaProduse(data);
+          });
+
+        // Butonul de regenerare
+        regenereazaBtn?.addEventListener("click", () => {
+          fetch(`/recomandari/${tipTen}`)
+            .then(res => res.json())
+            .then(data => afiseazaProduse(data));
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

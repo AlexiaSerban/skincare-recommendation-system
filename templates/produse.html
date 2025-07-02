@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Produse - Smart Recommendations</title>
+  <link rel="stylesheet" href="/static/produse.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+                  <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+
+
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+
+  <section class="intro-section">
+    <h1 class="section-title">Produse de îngrijire personală pentru toate tipurile de piele</h1>
+    
+    <div class="search-filter-bar">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchBar" placeholder="Caută un produs..." oninput="searchProducts()">
+      </div>
+      <button id="filterButton" class="btn-outline">Filtre</button>
+    </div>
+  </section>
+
+  <!-- FILTER PANEL -->
+  <div id="filterPanel" class="filter-panel">
+    <div class="filter-header">
+      <h2>Filtrare</h2>
+      <button id="closeFilter" class="close-btn">&times;</button>
+    </div>
+  
+    <div class="filter-body">
+      <div class="filter-section">
+        <h3>Alege tipul de produs:</h3>
+        <select id="filterType">
+          <option value="">Toate tipurile</option>
+          <option value="moisturiser">Creme hidratante</option>
+          <option value="serum">Seruri</option>
+          <option value="oil">Uleiuri pentru ten</option>
+          <option value="mist">Spray-uri</option>
+          <option value="balm">Balsamuri</option>
+          <option value="mask">Măști</option>
+          <option value="peel">Peeling</option>
+          <option value="eye Care">Îngrijirea Ochilor</option>
+          <option value="toner">Toner</option>
+          <option value="exfoliator">Exfoliante</option>
+          <option value="cleanser">Curățare</option>
+          <option value="bath salts">Sare de baie</option>
+          <option value="body Wash">Geluri de duș</option>
+          <option value="bath Oil">Uleiuri de baie</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <h3>Tip de ten:</h3>
+        <select id="filterSkinType">
+          <option value="">Toate</option>
+          <option value="uscat">Uscat</option>
+          <option value="gras">Gras</option>
+          <option value="acneic">Acneic</option>
+        </select>
+      </div>
+      
+  
+      <div class="filter-section">
+        <h3>Ingrediente:</h3>
+        <div id="ingredientFilters">
+          {% for ingredient in ingredients_list %}
+          <label>
+            <input type="checkbox" value="{{ ingredient }}"> {{ ingredient }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  
+    <div class="filter-footer">
+      <button id="applyFilters" class="apply-btn">Vizualizare</button>
+      <button id="resetFilters" class="apply-btn">Șterge filtrele</button>
+    </div>
+  </div>
+  
+
+  <!-- PRODUCT GRID -->
+  <section class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+      <div class="product-image-wrapper">
+        <img src="{{ product.imagine }}" alt="{{ product.product_name }}" onclick="window.location.href='/product/{{ product.id }}?page={{ page }}'">
+        {% if username %}
+        <button class="favorite-btn {% if product.id in favorite_ids %}active{% endif %}" data-product-id="{{ product.id }}">
+          <span class="heart-icon">&#10084;</span>
+        </button>
+      
+        {% endif %}
+      </div>
+      <h2>{{ product.product_name }}</h2>
+      <p><strong>Tip:</strong> {{ product.product_type }}</p>
+      {% if username %}
+      <form method="POST" action="/adauga_in_rutina">
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <input type="hidden" name="product_type" value="{{ product.product_type }}">
+        <button type="submit" class="btn-add-to-rutina"> Adaugă în rutina mea</button>
+      </form>
+      {% endif %}
+    </div>    
+    {% endfor %}
+  </section>
+
+  <!-- PAGINATION -->
+  {% if not product_type and not selected_ingredients %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="?page={{ page - 1 }}">&laquo; Pagina anterioară</a>
+    {% endif %}
+
+    {% if page > 3 %}
+      <a href="?page=1">1</a>
+      {% if page > 4 %}<span>...</span>{% endif %}
+    {% endif %}
+
+    {% for p in range(page - 2, page + 3) if p > 0 and p <= total_pages %}
+      <a href="?page={{ p }}" class="{% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    {% if page < total_pages - 2 %}
+      {% if page < total_pages - 3 %}<span>...</span>{% endif %}
+      <a href="?page={{ total_pages }}">{{ total_pages }}</a>
+    {% endif %}
+
+    {% if page < total_pages %}
+      <a href="?page={{ page + 1 }}">Pagina următoare &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2025 SkinAI</p>
+  </footer>
+
+  <script>
+  function initFavoriteButtons() {
+    const favoriteButtons = document.querySelectorAll(".favorite-btn");
+    favoriteButtons.forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const productId = btn.dataset.productId;
+        const isActive = btn.classList.toggle("active");
+
+        fetch("/toggle_favorite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            action: isActive ? "add" : "remove"
+          })
+        }).catch((err) => console.error("Eroare la trimitere:", err));
+      });
+    });
+  }
+
+  function applyFilters() {
+    let type = document.getElementById("filterType").value;
+    let skinType = document.getElementById("filterSkinType").value;
+    let ingredients = Array.from(document.querySelectorAll("#ingredientFilters input:checked"))
+      .map(cb => cb.value)
+      .join(",");
+
+    let url = `/produse?type=${encodeURIComponent(type)}&skin_type=${encodeURIComponent(skinType)}&ingredients=${encodeURIComponent(ingredients)}`;
+
+    fetch(url)
+      .then(response => response.text())
+      .then(html => {
+        document.querySelector(".product-grid").innerHTML = new DOMParser()
+          .parseFromString(html, "text/html")
+          .querySelector(".product-grid").innerHTML;
+
+        initFavoriteButtons();
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initFavoriteButtons();
+
+    let filterButton = document.getElementById("filterButton");
+    let filterPanel = document.getElementById("filterPanel");
+    let closeFilter = document.getElementById("closeFilter");
+    let resetFilters = document.getElementById("resetFilters");
+
+    filterButton.addEventListener("click", function () {
+      filterPanel.classList.add("active");
+    });
+
+    closeFilter.addEventListener("click", function () {
+      filterPanel.classList.remove("active");
+    });
+
+    document.getElementById("filterType").addEventListener("change", applyFilters);
+    document.getElementById("filterSkinType").addEventListener("change", applyFilters);
+
+    document.querySelectorAll("#ingredientFilters input").forEach((cb) => {
+      cb.addEventListener("change", applyFilters);
+    });
+
+    resetFilters.addEventListener("click", function () {
+      document.getElementById("filterType").value = "";
+      document.getElementById("filterSkinType").value = "";
+      document.querySelectorAll("#ingredientFilters input").forEach(cb => cb.checked = false);
+
+      applyFilters();  
+      filterPanel.classList.remove("active");
+    });
+  });
+
+  // CAUTARE
+  function searchProducts() {
+    let searchQuery = document.getElementById("searchBar").value;
+    let productType = document.getElementById("filterType").value;
+    let selectedIngredients = [];
+    document.querySelectorAll("#ingredientFilters input:checked").forEach((cb) => {
+      selectedIngredients.push(cb.value);
+    });
+
+    let url = `/cautare?query=${encodeURIComponent(searchQuery)}&type=${encodeURIComponent(productType)}`;
+    selectedIngredients.forEach(ingredient => {
+      url += `&ingredients=${encodeURIComponent(ingredient)}`;
+    });
+
+    fetch(url)
+      .then(response => response.json())
+      .then(products => {
+        let productGrid = document.querySelector(".product-grid");
+        productGrid.innerHTML = "";
+
+        products.forEach(product => {
+          let productCard = document.createElement("div");
+          productCard.classList.add("product-card");
+          productCard.onclick = () => window.location.href = `/product/${product.id}`;
+
+          productCard.innerHTML = `
+            <img src="${product.imagine}" alt="${product.product_name}">
+            <h2>${product.product_name}</h2>
+            <p><strong>Tip:</strong> ${product.product_type}</p>
+          `;
+          productGrid.appendChild(productCard);
+        });
+
+        initFavoriteButtons(); 
+      });
+  }
+</script>
+
+  
+    

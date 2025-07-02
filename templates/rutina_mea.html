@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Rutina Mea</title>
+  <link rel="stylesheet" href="/static/rutina.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="user-profile">
+        {% if username %}
+        <a href="/profile">
+          <img src="{{ url_for('static', filename='profil.png') }}" alt="Profil" class="profile-icon">
+        </a>
+        <span class="username">{{ username }}</span>
+        {% endif %}
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Acasă</a></li>
+        <li><a href="/produse">Produse</a></li>
+        <li><a href="/favorite">Favorite</a></li>
+        <li><a href="/analiza_tenului">Analiză ten</a></li>
+        {% if username %}
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <main class="rutina-content">
+    <h1>✨ Rutina personalizată ✨</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <p>{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <p class="rutina-subtitle">Compară rutina creată de tine cu rutina recomandată și alege-o pe cea mai potrivită pentru tine!</p>
+  
+    <div class="rutina-grid-2col">
+      
+      <!-- Rutina normala -->
+      <div class="rutina-card-section">
+        <h2>Rutina ta</h2>
+        {% if rutina_mea %}
+        <div class="rutina-steps-small">
+          {% for step in rutina_mea %}
+              <div class="rutina-step">
+                <h3>{{ step.nume }}</h3>
+                {% if step.produs %}
+                  <div class="rutina-card">
+                    <img src="{{ step.produs.imagine }}" alt="{{ step.produs.product_name }}">
+                    <div class="rutina-info">
+                      <h3>{{ step.produs.product_name }}</h3>
+                      <p><strong>Tip:</strong> {{ step.produs.product_type }}</p>
+                      <a href="/product/{{ step.produs.id }}" class="btn-detalii">Detalii</a>
+                      <form method="POST" action="/sterge_din_rutina">
+                        <input type="hidden" name="product_id" value="{{ step.produs.id }}">
+                        <button type="submit" class="btn-remove">Șterge</button>
+                      </form>
+                    </div>
+                  </div>
+                {% else %}
+                  <form method="GET" action="/produse">
+                    <input type="hidden" name="type" value="{{ step.tip_cautare }}">
+                    <button type="submit" class="btn-add">+</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div> 
+        {% else %}
+          <p>Nu ai rutină creată manual.</p>
+        {% endif %}
+      </div>
+      
+      
+      
+  
+      <!-- Rutina generata -->
+      <div class="rutina-card-section">
+        <h2>Rutina recomandată</h2>
+      
+        {% if rutina_ai|length > 0 %}
+        <div class="rutina-steps-small">
+          {% for produs in rutina_ai %}
+              <div class="rutina-step">
+                <h3>{{ produs.step_name }}</h3>
+                <div class="rutina-card">
+                  <img src="{{ produs.imagine }}" alt="{{ produs.product_name }}">
+                  <div class="rutina-info">
+                    <h3>{{ produs.product_name }}</h3>
+                    <p><strong>Tip:</strong> {{ produs.product_type }}</p>
+                    <a href="/product/{{ produs.id }}" class="btn-detalii">Detalii</a> 
+                  </div>
+                  
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <!-- Buton Genereaza -->
+        <form method="POST" action="/genereaza_rutina_ai" id="genereaza-form" style="margin-top: 20px; text-align: center;">
+          {% if rutina_ai|length > 0 %}
+            <button type="submit" class="btn-genereaza">🔄 Generează altă rutină </button>
+          {% else %}
+            <button type="submit" class="btn-genereaza">✨ Generează rutina </button>
+          {% endif %}
+        </form>
+        
+      
+      </div>
+      
+      
+      
+  
+    </div>
+  
+  </main>
+  
+
+
+  <footer>
+    <p>&copy; 2025 SkinAI</p>
+  </footer>
+
+</body>
+</html>
